@@ -19,18 +19,21 @@ if test "$PHP_SIRIDB" = "yes"; then
         AC_MSG_ERROR(Please install the libsiridb library)
     fi
 
-    AC_MSG_CHECKING([siridb header files])
-    SIRIDB_INC_DIR="/usr/local/include/libsiridb"
-    INC_FILES="$SIRIDB_INC_DIR/siridb.h"
-    for i in $INC_FILES; do
-        if test ! -f $i; then
-        AC_MSG_ERROR([siridb header files not found in $SIRIDB_INC_DIR])
+    AC_MSG_CHECKING(for siridb.h in default paths)
+    for i in /usr/local/include/libsiridb /usr/include/libsiridb; do
+        if test -r $i/siridb.h; then
+            SIRIDB_INC_DIR=$i 
+            AC_MSG_RESULT(found siridb.h in $i)            
         fi
     done
-    AC_MSG_RESULT($SIRIDB_INC_DIR)
+
+    if test -z "$SIRIDB_INC_DIR"; then
+        AC_MSG_RESULT(not found)
+        AC_MSG_ERROR(Please install the libsiridb library)
+    fi
 
     PHP_ADD_INCLUDE($SIRIDB_INC_DIR)
-
+    
     PHP_CHECK_LIBRARY(siridb, siridb_create,[
         PHP_ADD_LIBRARY(siridb,1,SIRIDB_SHARED_LIBADD)
         PHP_SUBST(SIRIDB_SHARED_LIBADD)

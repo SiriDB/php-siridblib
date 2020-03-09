@@ -10,6 +10,8 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <stdbool.h>
+#include <arpa/inet.h>
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -186,7 +188,7 @@ bool check_connection(long sockfd) {
     return true;
 }
 
-zval ** first_series_value(zval * ar) {
+zval * first_series_value(zval * ar) {
     zval * first_value;
     HashTable *arr_hash;
     HashTable *series_hash;
@@ -194,8 +196,8 @@ zval ** first_series_value(zval * ar) {
     long num_key;
     zval * val;
     zend_string *key;
-    zval **point_ts;
-    zval **point_value;
+    zval * point_ts;
+    zval * point_value;
 
     arr_hash = Z_ARRVAL_P(ar);
 
@@ -285,7 +287,7 @@ PHP_FUNCTION(siridb_query)
     }
 
     char *fullbuffer = emalloc(sizeof(siridb_pkg_t) + query_resp_pkg->len);
-    m = recv_all(sockfd, fullbuffer, sizeof(siridb_pkg_t) + query_resp_pkg->len, NULL);
+    m = recv_all(sockfd, fullbuffer, sizeof(siridb_pkg_t) + query_resp_pkg->len, 0);
 
     if (m < 0) {
         efree(buffer);
@@ -335,7 +337,7 @@ PHP_FUNCTION(siridb_insert)
     zval * val;
     zval * ar;
     zend_string *serie_name;
-    zval ** series_type;
+    zval * series_type;
     ssize_t n;
 
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "la", &sockfd, &ar) == FAILURE) {
@@ -381,7 +383,7 @@ PHP_FUNCTION(siridb_insert)
                 printf("h5");
                 
 
-                siridb_series_tp *tp = NULL;
+                siridb_series_tp tp;
 
                 if (Z_TYPE_P(series_type) == IS_STRING) {
                     printf("Value is str!\n");

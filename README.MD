@@ -10,6 +10,16 @@ An C extension for PHP. Gives access to commands in PHP code to connect to SiriD
 
 ## Compiling
 
-### MacOS
+### MacOS and Linux
+
+Make sure you have `libsiridb` and `libqpack` insatalled on your system.
+Make sure you have `phpize` available as command
+
+
 Run:
-`make && sudo make install`
+```
+phpize
+./configure
+make
+sudo make install
+```
