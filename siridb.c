@@ -78,7 +78,7 @@ PHP_FUNCTION(siridb_connect)
     size_t password_len;
     char *dbname;
     size_t dbname_len;
-    int port;
+    long port;
     
     if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "slsss", &hostname, &hostname_len, &port, &username, &username_len, &password, &password_len, &dbname, &dbname_len) == FAILURE) {
         zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect method parameters for siridb_connect", 0 TSRMLS_CC);
