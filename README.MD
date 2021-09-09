@@ -1,6 +1,8 @@
 # php-siridblib
 An C extension for PHP. Gives access to commands in PHP code to connect to SiriDB Server and query/insert.
 
+In order to be compatible with >= php8, we have removed the usage of TSRMLS_C and TSRMLS_CC. This makes this lib no longer compatible with php5.
+
 ## Methods
 - siridb_connect('ip', port, 'user', 'pass', 'db_name') -> returns connection to siridb
 - siridb_close(conn) -> closes given connection
