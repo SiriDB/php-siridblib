@@ -1,6 +1,6 @@
 #ifndef PHP_SIRIDB_H
 #define PHP_SIRIDB_H 1
-#define PHP_SIRIDB_WORLD_VERSION "0.0.2"
+#define PHP_SIRIDB_WORLD_VERSION "0.0.3"
 #define PHP_SIRIDB_WORLD_EXTNAME "php-siridblib"
 
 

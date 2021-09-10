@@ -80,8 +80,8 @@ PHP_FUNCTION(siridb_connect)
     size_t dbname_len;
     long port;
     
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "slsss", &hostname, &hostname_len, &port, &username, &username_len, &password, &password_len, &dbname, &dbname_len) == FAILURE) {
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect method parameters for siridb_connect", 0 TSRMLS_CC);
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "slsss", &hostname, &hostname_len, &port, &username, &username_len, &password, &password_len, &dbname, &dbname_len) == FAILURE) {
+        zend_throw_exception(zend_exception_get_default(), "Incorrect method parameters for siridb_connect", 0);
         return;
     }
     
@@ -93,7 +93,7 @@ PHP_FUNCTION(siridb_connect)
     // SIRIDBSOCKFD_G(siridbsockfd) = socket(AF_INET, SOCK_STREAM, 0); 
     sockfd = socket(AF_INET, SOCK_STREAM, 0); 
     if (sockfd == -1) { 
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Failed setting up socket to SiriDB", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "Failed setting up socket to SiriDB", 0);
         return;
     } 
 
@@ -106,7 +106,7 @@ PHP_FUNCTION(siridb_connect)
   
     // connect the client socket to server socket 
     if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Failed connecting to SiriDB", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "Failed connecting to SiriDB", 0);
         return;
     }
 
@@ -121,14 +121,14 @@ PHP_FUNCTION(siridb_connect)
     buffer = emalloc(sizeof(siridb_pkg_t));
 
     if (n < 0) {
-         zend_throw_exception(zend_exception_get_default(TSRMLS_C), "SiriDB authentication failed", 0 TSRMLS_CC);
+         zend_throw_exception(zend_exception_get_default(), "SiriDB authentication failed", 0);
          return;
     }
 
     n = read(sockfd,buffer,sizeof(siridb_pkg_t));
 
     if (n < 0) {
-         zend_throw_exception(zend_exception_get_default(TSRMLS_C), "SiriDB authentication failed", 0 TSRMLS_CC);
+         zend_throw_exception(zend_exception_get_default(), "SiriDB authentication failed", 0);
          return;
     }
 
@@ -137,7 +137,7 @@ PHP_FUNCTION(siridb_connect)
 
     if (auth_resp->tp != CprotoResAuthSuccess) {
         efree(buffer);
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "SiriDB authentication failed, please check used credentials", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "SiriDB authentication failed, please check used credentials", 0);
         return;
     } else {
         efree(buffer);
@@ -212,11 +212,11 @@ zval * first_series_value(zval * ar) {
             point_value = zend_hash_index_find(series_hash, 1);
             return point_value;
         } else {
-            zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect value for series to be inserted", 0 TSRMLS_CC);
+            zend_throw_exception(zend_exception_get_default(), "Incorrect value for series to be inserted", 0);
             return NULL;
         }
     } else {
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect value for series to be inserted", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "Incorrect value for series to be inserted", 0);
         return NULL;
     }
 
@@ -243,8 +243,8 @@ PHP_FUNCTION(siridb_close)
 {
     long sockfd;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "l", &sockfd) == FAILURE) {
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect method parameters for siridb_close", 0 TSRMLS_CC);
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "l", &sockfd) == FAILURE) {
+        zend_throw_exception(zend_exception_get_default(), "Incorrect method parameters for siridb_close", 0);
         return;
     }
 
@@ -259,13 +259,13 @@ PHP_FUNCTION(siridb_query)
     ssize_t n, m;
  
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "ls", &sockfd, &query, &query_len) == FAILURE) {
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect method parameters for siridb_query", 0 TSRMLS_CC);
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "ls", &sockfd, &query, &query_len) == FAILURE) {
+        zend_throw_exception(zend_exception_get_default(), "Incorrect method parameters for siridb_query", 0);
         return;
     }
 
     if (!check_connection(sockfd)) {
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Invalid SiriDB connection", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "Invalid SiriDB connection", 0);
         return;
     }
 
@@ -282,7 +282,7 @@ PHP_FUNCTION(siridb_query)
 
     if (n < 0) {
         efree(buffer);
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Did not receive a complete response from SiriDB", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "Did not receive a complete response from SiriDB", 0);
         return;
     }
 
@@ -292,7 +292,7 @@ PHP_FUNCTION(siridb_query)
     if (m < 0) {
         efree(buffer);
         efree(fullbuffer);
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Did not receive a complete response from SiriDB", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "Did not receive a complete response from SiriDB", 0);
         return;
     }
 
@@ -309,7 +309,7 @@ PHP_FUNCTION(siridb_query)
             if (rc) {
                 efree(buffer);
                 efree(fullbuffer);
-                zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Received corrupted data in response from SiriDB", 0 TSRMLS_CC);
+                zend_throw_exception(zend_exception_get_default(), "Received corrupted data in response from SiriDB", 0);
                 return;
             } else {
                 char * json = get_siridb_response_data(resp, query_resp_pkg2);
@@ -340,13 +340,13 @@ PHP_FUNCTION(siridb_insert)
     zval * series_type;
     ssize_t n;
 
-    if (zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC, "la", &sockfd, &ar) == FAILURE) {
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect method parameters for siridb_insert", 0 TSRMLS_CC);
+    if (zend_parse_parameters(ZEND_NUM_ARGS(), "la", &sockfd, &ar) == FAILURE) {
+        zend_throw_exception(zend_exception_get_default(), "Incorrect method parameters for siridb_insert", 0);
         return;
     }
 
     if( Z_TYPE_P(ar) != IS_ARRAY) {
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect value for series to be inserted", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "Incorrect value for series to be inserted", 0);
         return;
     }
 
@@ -395,7 +395,7 @@ PHP_FUNCTION(siridb_insert)
                     printf("Value is int!\n");
                     tp = SIRIDB_SERIES_TP_INT64;
                 } else {
-                    zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Incorrect value for series to be inserted", 0 TSRMLS_CC);
+                    zend_throw_exception(zend_exception_get_default(), "Incorrect value for series to be inserted", 0);
                     return;
                 }
                 
@@ -441,7 +441,7 @@ PHP_FUNCTION(siridb_insert)
 
     if (n < 0) {
         efree(buffer);
-        zend_throw_exception(zend_exception_get_default(TSRMLS_C), "Did not receive a complete response from SiriDB", 0 TSRMLS_CC);
+        zend_throw_exception(zend_exception_get_default(), "Did not receive a complete response from SiriDB", 0);
         return;
     }
 
