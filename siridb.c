@@ -4,9 +4,9 @@
 #include "php.h"
 #include "zend_exceptions.h"
 #include "php-siridb.h"
-#include <netdb.h> 
+#include <netdb.h>
 #include <libsiridb/siridb.h>
-#include <sys/socket.h> 
+#include <sys/socket.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
@@ -19,7 +19,7 @@
 #include <unistd.h>
 #endif
 
-#define SA struct sockaddr 
+#define SA struct sockaddr
 
 static zend_function_entry siridb_client_functions[] = {
     PHP_FE(siridb_connect, NULL)
@@ -79,33 +79,33 @@ PHP_FUNCTION(siridb_connect)
     char *dbname;
     size_t dbname_len;
     long port;
-    
+
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "slsss", &hostname, &hostname_len, &port, &username, &username_len, &password, &password_len, &dbname, &dbname_len) == FAILURE) {
         zend_throw_exception(zend_exception_get_default(), "Incorrect method parameters for siridb_connect", 0);
         return;
     }
-    
+
     int sockfd;
-    ssize_t n; 
-    struct sockaddr_in servaddr; 
-  
-    // socket create and varification 
-    // SIRIDBSOCKFD_G(siridbsockfd) = socket(AF_INET, SOCK_STREAM, 0); 
-    sockfd = socket(AF_INET, SOCK_STREAM, 0); 
-    if (sockfd == -1) { 
+    ssize_t n;
+    struct sockaddr_in servaddr;
+
+    // socket create and varification
+    // SIRIDBSOCKFD_G(siridbsockfd) = socket(AF_INET, SOCK_STREAM, 0);
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1) {
         zend_throw_exception(zend_exception_get_default(), "Failed setting up socket to SiriDB", 0);
         return;
-    } 
+    }
 
-    bzero((char *) &servaddr, sizeof(servaddr)); 
-  
-    // assign IP, PORT 
-    servaddr.sin_family = AF_INET; 
-    servaddr.sin_addr.s_addr = inet_addr(estrndup(hostname, hostname_len)); 
-    servaddr.sin_port = htons(port); 
-  
-    // connect the client socket to server socket 
-    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) { 
+    bzero((char *) &servaddr, sizeof(servaddr));
+
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr(estrndup(hostname, hostname_len));
+    servaddr.sin_port = htons(port);
+
+    // connect the client socket to server socket
+    if (connect(sockfd, (SA*)&servaddr, sizeof(servaddr)) != 0) {
         zend_throw_exception(zend_exception_get_default(), "Failed connecting to SiriDB", 0);
         return;
     }
@@ -115,21 +115,31 @@ PHP_FUNCTION(siridb_connect)
     const char * siridbdbname = estrndup(dbname, dbname_len);
 
     siridb_pkg_t * auth_pkg = siridb_pkg_auth(2, siridbusername, siridbpassword, siridbdbname);
-    n = write(sockfd, (char *) auth_pkg, sizeof(siridb_pkg_t) + auth_pkg->len); 
+
+    efree(siridbusername);
+    efree(siridbpassword);
+    efree(siridbdbname);
+
+    if (auth_pkg == NULL) {
+        zend_throw_exception(zend_exception_get_default(), "SiriDB allocation failed", 0);
+        return;
+    }
+
+    n = write(sockfd, (char *) auth_pkg, sizeof(siridb_pkg_t) + auth_pkg->len);
+    if (n < 0) {
+        zend_throw_exception(zend_exception_get_default(), "SiriDB authentication failed", 0);
+        return;
+    }
 
     char *buffer;
     buffer = emalloc(sizeof(siridb_pkg_t));
 
-    if (n < 0) {
-         zend_throw_exception(zend_exception_get_default(), "SiriDB authentication failed", 0);
-         return;
-    }
-
     n = read(sockfd,buffer,sizeof(siridb_pkg_t));
 
     if (n < 0) {
-         zend_throw_exception(zend_exception_get_default(), "SiriDB authentication failed", 0);
-         return;
+        efree(buffer);
+        zend_throw_exception(zend_exception_get_default(), "SiriDB authentication failed", 0);
+        return;
     }
 
 
@@ -257,7 +267,7 @@ PHP_FUNCTION(siridb_query)
     char *query;
     size_t query_len;
     ssize_t n, m;
- 
+
 
     if (zend_parse_parameters(ZEND_NUM_ARGS(), "ls", &sockfd, &query, &query_len) == FAILURE) {
         zend_throw_exception(zend_exception_get_default(), "Incorrect method parameters for siridb_query", 0);
@@ -270,10 +280,10 @@ PHP_FUNCTION(siridb_query)
     }
 
     siridb_pkg_t *  query_pkg = siridb_pkg_query(1, estrndup(query, query_len));
-    n = write(sockfd, (char *) query_pkg, sizeof(siridb_pkg_t) + query_pkg->len); 
+    n = write(sockfd, (char *) query_pkg, sizeof(siridb_pkg_t) + query_pkg->len);
 
     char *buffer = emalloc(sizeof(siridb_pkg_t));
-    
+
     if (n < 0)
          RETURN_BOOL(false);
 
@@ -296,7 +306,7 @@ PHP_FUNCTION(siridb_query)
         return;
     }
 
-    if (m == sizeof(siridb_pkg_t) + query_resp_pkg->len) { 
+    if (m == sizeof(siridb_pkg_t) + query_resp_pkg->len) {
         siridb_pkg_t * query_resp_pkg2 = (siridb_pkg_t *) fullbuffer;
 
         if (query_resp_pkg2->tp == CprotoErrQuery) {
@@ -319,7 +329,7 @@ PHP_FUNCTION(siridb_query)
                 efree(fullbuffer);
                 RETURN_STRING(json);
             }
-            
+
         }
     }
     efree(buffer);
@@ -357,7 +367,7 @@ PHP_FUNCTION(siridb_insert)
     siridb_series_t * insert_series[zend_hash_num_elements(arr_hash)];
 
     printf("h1");
-    
+
     int serie_num = 0;
     // Loop through series
     ZEND_HASH_FOREACH_KEY_VAL(arr_hash, num_key, serie_name, val) {
@@ -374,31 +384,23 @@ PHP_FUNCTION(siridb_insert)
                 if (series_type == NULL)
                     return;
 
-                printf("h4");
-
                 HashTable *points_hash;
                 points_hash = Z_ARRVAL_P(val);
                 int count = zend_hash_num_elements(points_hash);
 
-                printf("h5");
-                
-
                 siridb_series_tp tp;
 
                 if (Z_TYPE_P(series_type) == IS_STRING) {
-                    printf("Value is str!\n");
                     tp = SIRIDB_SERIES_TP_STR;
                 } else if (Z_TYPE_P(series_type) == IS_DOUBLE) {
-                    printf("Value is real!\n");
                     tp = SIRIDB_SERIES_TP_REAL;
                 } else if (Z_TYPE_P(series_type) == IS_LONG) {
-                    printf("Value is int!\n");
                     tp = SIRIDB_SERIES_TP_INT64;
                 } else {
                     zend_throw_exception(zend_exception_get_default(), "Incorrect value for series to be inserted", 0);
                     return;
                 }
-                
+
                 insert_series[serie_num] = siridb_series_create(
                 tp,     /* type integer */
                 ZSTR_VAL(serie_name),   /* name for the series */
@@ -419,7 +421,7 @@ PHP_FUNCTION(siridb_insert)
                     } else if (tp == SIRIDB_SERIES_TP_REAL) {
                         point->via.real = (double) Z_DVAL_P(zend_hash_index_find(pval, 1));
                     } else if (tp == SIRIDB_SERIES_TP_INT64) {
-                        point->via.int64 = (int64_t) zend_hash_index_find(pval, 1);
+                        point->via.int64 = (int64_t) Z_LVAL_P(zend_hash_index_find(pval, 1));
                     }
                 }
                 serie_num++;
@@ -429,10 +431,10 @@ PHP_FUNCTION(siridb_insert)
     } ZEND_HASH_FOREACH_END();
 
     siridb_pkg_t *  series_pkg = siridb_pkg_series(1, insert_series, zend_hash_num_elements(arr_hash));
-    n = write(sockfd, (char *) series_pkg, sizeof(siridb_pkg_t) + series_pkg->len); 
+    n = write(sockfd, (char *) series_pkg, sizeof(siridb_pkg_t) + series_pkg->len);
 
     char *buffer = emalloc(sizeof(siridb_pkg_t));
-    
+
     if (n < 0)
          RETURN_BOOL(false);
 

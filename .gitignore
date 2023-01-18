@@ -1,1 +1,17 @@
 local_test.php
+Makefile*
+build/
+.libs/
+*cache/
+config.h.in~
+config.log
+config.nice
+config.status
+configure.ac
+libtool
+modules/
+siridb.dep
+siridb.la
+siridb.lo
+local_test
+configure
